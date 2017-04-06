@@ -29,8 +29,9 @@ class Visit(Package):
     """VisIt is an Open Source, interactive, scalable, visualization,
        animation and analysis tool."""
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
-    url = "http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz"
+    url = "http://portal.nersc.gov/project/visit/releases/2.12.1/visit2.12.1.tar.gz"
 
+    version('2.12.1', '4d37a21f1bee651e5341ef7bcaa7669f')
     version('2.10.3', 'a1082a6f6dab3e2dcb58993603456c2b')
     version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
