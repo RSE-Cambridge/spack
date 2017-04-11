@@ -42,6 +42,7 @@ class Visit(Package):
     depends_on('python')
     depends_on('silo+shared')
     depends_on('hdf5~mpi')
+    depends_on('py-pythonqwt')
 
     def install(self, spec, prefix):
         qt_bin = spec['qt'].prefix.bin
