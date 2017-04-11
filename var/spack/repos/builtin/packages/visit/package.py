@@ -38,7 +38,7 @@ class Visit(Package):
 
     depends_on('cmake', type='build')
     depends_on('vtk~opengl2')
-    depends_on('qt@4.8.6')
+    depends_on('qt')
     depends_on('python')
     depends_on('silo+shared')
     depends_on('hdf5~mpi')
