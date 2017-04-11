@@ -37,7 +37,7 @@ class Visit(Package):
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
     depends_on('cmake', type='build')
-    depends_on('vtk@6.1.0~opengl2')
+    depends_on('vtk~opengl2')
     depends_on('qt@4.8.6')
     depends_on('python')
     depends_on('silo+shared')
@@ -49,8 +49,8 @@ class Visit(Package):
         with working_dir('spack-build', create=True):
             cmake_args = std_cmake_args[:]
             cmake_args.extend([
-                '-DVTK_MAJOR_VERSION=6',
-                '-DVTK_MINOR_VERSION=1',
+                '-DVTK_MAJOR_VERSION={0}'.format(spec['vtk'].version[0]),
+                '-DVTK_MINOR_VERSION={0}'.format(spec['vtk'].version[1]),
                 '-DVISIT_USE_GLEW=OFF',
                 '-DVISIT_LOC_QMAKE_EXE:FILEPATH={0}/qmake-qt4'.format(qt_bin),
                 '-DPYTHON_DIR:PATH={0}'.format(spec['python'].prefix),
