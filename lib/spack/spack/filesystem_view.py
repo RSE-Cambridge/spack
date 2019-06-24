@@ -272,7 +272,8 @@ class YamlFilesystemView(FilesystemView):
             return False
 
         if spec.external:
-            tty.warn(self._croot + 'Skipping external package: %s'
+            self.merge(spec)
+            tty.warn(self._croot + 'Skipping external package: %s (but merging the tree anyway)'
                      % colorize_spec(spec))
             return True
 
