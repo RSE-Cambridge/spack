@@ -69,7 +69,7 @@ pass() {
 #
 succeeds() {
     printf "'%s' succeeds ... " "$*"
-    output=$("$@" 2>&1)
+    output=$($* 2>&1)
     err="$?"
 
     if [ "$err" != 0 ]; then
@@ -163,11 +163,16 @@ unuse() {
 # Make sure no environment is active
 unset SPACK_ENV
 
-# fail with undefined variables
+# fail on undefined variables
 set -u
 
 # Source setup-env.sh before tests
 .  share/spack/setup-env.sh
+
+# bash should expand aliases even when non-interactive
+if [ -n "${BASH:-}" ]; then
+    shopt -s expand_aliases
+fi
 
 title "Testing setup-env.sh with $_sp_shell"
 
@@ -191,17 +196,36 @@ b_install=$(spack location -i b)
 b_module=$(spack -m module tcl find b)
 b_dotkit=$(spack -m module dotkit find b)
 
+# create a test environment for tesitng environment commands
+echo "Creating a mock environment"
+spack env create spack_test_env
+test_env_location=$(spack location -e spack_test_env)
+
 # ensure that we uninstall b on exit
 cleanup() {
+    if [ "$?" != 0 ]; then
+        trapped_error=true
+    else
+        trapped_error=false
+    fi
+
+    echo "Removing test environment before exiting."
+    spack env deactivate
+    spack env rm -y spack_test_env
+
     title "Cleanup"
-    echo "Removing test package before exiting test script."
-    spack -m uninstall -yf b
-    spack -m uninstall -yf a
+    echo "Removing test packages before exiting."
+    spack -m uninstall -yf b a
 
     echo
     echo "$success tests succeeded."
     echo "$errors tests failed."
-    if [ "$errors" = 0 ]; then
+
+    if [ "$trapped_error" = true ]; then
+        echo "Exited due to an error."
+    fi
+
+    if [ "$errors" = 0 ] && [ "$trapped_error" = false ]; then
         pass
         exit 0
     else
@@ -275,6 +299,10 @@ title 'Testing `spack env`'
 contains "usage: spack env " spack env -h
 contains "usage: spack env " spack env --help
 
+title 'Testing `spack env list`'
+contains " spack env list " spack env list -h
+contains " spack env list " spack env list --help
+
 title 'Testing `spack env activate`'
 contains "No such environment:" spack env activate no_such_environment
 contains "usage: spack env activate " spack env activate
@@ -287,6 +315,36 @@ contains "usage: spack env deactivate " spack env deactivate no_such_environment
 contains "usage: spack env deactivate " spack env deactivate -h
 contains "usage: spack env deactivate " spack env deactivate --help
 
-title 'Testing `spack env list`'
-contains " spack env list " spack env list -h
-contains " spack env list " spack env list --help
+title 'Testing activate and deactivate together'
+ensure_activated() {
+    if [ -z ${SPACK_ENV+x} ]; then
+        fail
+        echo_msg '$SPACK_ENV was not set!'
+    else
+        pass
+    fi
+}
+
+ensure_deactivated() {
+    if [ ! -z ${SPACK_ENV+x} ]; then
+        fail
+        echo_msg '$SPACK_ENV was set:'
+        echo "    $SPACK_ENV"
+    else
+        pass
+    fi
+}
+
+printf "'spack env activate test_env' succeeds ... "
+spack env activate spack_test_env
+ensure_activated
+printf "'spack env deactivate' succeeds ... "
+spack env deactivate
+ensure_deactivated
+
+printf "'spack env activate test_env' succeeds ... "
+spack env activate spack_test_env
+ensure_activated
+printf "'despacktivate' succeeds ... "
+despacktivate
+ensure_deactivated
