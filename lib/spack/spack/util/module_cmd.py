@@ -107,11 +107,21 @@ def get_path_arg_from_module_line(line):
     return path_arg
 
 
+def module_line_modifies_path(line):
+    modifiers = ['prepend-path', 'prepend_path',
+                 'append-path', 'append_path',
+                 'setenv']
+    path_strs = ['"PATH"', "'PATH'", ' PATH ']
+    return any(m in line
+               for m in modifiers) and any(p in line
+                                              for p in path_strs)
+
+
 def get_bin_path_from_module(mod):
     """Inspects a TCL or lmod module for an entry that indicates a modification
     of the PATH variable."""
     text = module('show', mod).split('\n')
-    text = filter(lambda x: '"PATH"' in x or ' PATH ' in x, text)
+    text = filter(module_line_modifies_path, text)
     for line in text:
         try:
             return get_path_arg_from_module_line(line)
