@@ -38,6 +38,9 @@ def setup_parser(subparser):
         dest='mode',
         const='deps',
         help='show full dependency DAG of installed packages')
+    format_group.add_argument(
+        "--format", action="store", default=None,
+        help="output specs with the specified format string")
 
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'tags'])
@@ -143,6 +146,26 @@ def setup_env(env):
     return decorator, added, roots, removed
 
 
+def display_env(env, args, decorator):
+    tty.msg('In environment %s' % env.name)
+
+    if not env.user_specs:
+        tty.msg('No root specs')
+    else:
+        tty.msg('Root specs')
+        # TODO: Change this to not print extraneous deps and variants
+        display_specs(
+            env.user_specs, args,
+            decorator=lambda s, f: color.colorize('@*{%s}' % f))
+        print()
+
+    if args.show_concretized:
+        tty.msg('Concretized roots')
+        display_specs(
+            env.specs_by_hash.values(), args, decorator=decorator)
+        print()
+
+
 def find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
@@ -168,25 +191,11 @@ def find(parser, args):
         results = [x for x in results if x.name in packages_with_tags]
 
     # Display the result
-    if env:
-        tty.msg('In environment %s' % env.name)
-
-        if not env.user_specs:
-            tty.msg('No root specs')
-        else:
-            tty.msg('Root specs')
-            # TODO: Change this to not print extraneous deps and variants
-            display_specs(
-                env.user_specs, args,
-                decorator=lambda s, f: color.colorize('@*{%s}' % f))
-        print()
-
-        if args.show_concretized:
-            tty.msg('Concretized roots')
-            display_specs(
-                env.specs_by_hash.values(), args, decorator=decorator)
-            print()
-
-    tty.msg("%s" % plural(len(results), 'installed package'))
-
-    display_specs(results, args, decorator=decorator, all_headers=True)
+    if args.format:
+        for spec in results:
+            print(spec.format(args.format))
+    elif env:
+        display_env(env, args, decorator)
+    else:
+        tty.msg("%s" % plural(len(results), 'installed package'))
+        display_specs(results, args, decorator=decorator, all_headers=True)
