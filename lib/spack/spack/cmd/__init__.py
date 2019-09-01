@@ -21,6 +21,7 @@ import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
+import spack.util.spack_json as sjson
 from spack.error import SpackError
 
 
@@ -198,6 +199,19 @@ def disambiguate_spec(spec, env):
 def gray_hash(spec, length):
     h = spec.dag_hash(length) if spec.concrete else '-' * length
     return colorize('@K{%s}' % h)
+
+
+def display_specs_as_json(specs):
+    """Convert specs to a list of json records."""
+    seen = set()
+    records = []
+    for spec in specs:
+        for dep in spec.traverse():
+            if dep.dag_hash() not in seen:
+                seen.add(spec.dag_hash())
+                records.append(dep.to_record_dict())
+
+    sjson.dump(records, sys.stdout)
 
 
 def display_specs(specs, args=None, **kwargs):

@@ -10,8 +10,8 @@ import llnl.util.lang
 
 import spack.environment as ev
 import spack.repo
+import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
-from spack.cmd import display_specs
 from spack.util.string import plural
 
 description = "list and search installed packages"
@@ -40,7 +40,10 @@ def setup_parser(subparser):
         help='show full dependency DAG of installed packages')
     format_group.add_argument(
         "--format", action="store", default=None,
-        help="output specs with the specified format string")
+        help="fomrat output specs with the provided format string")
+    format_group.add_argument(
+        "--json", action="store_true", default=False,
+        help="output specs as machine-readable json records")
 
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'tags'])
@@ -154,14 +157,14 @@ def display_env(env, args, decorator):
     else:
         tty.msg('Root specs')
         # TODO: Change this to not print extraneous deps and variants
-        display_specs(
+        cmd.display_specs(
             env.user_specs, args,
             decorator=lambda s, f: color.colorize('@*{%s}' % f))
         print()
 
     if args.show_concretized:
         tty.msg('Concretized roots')
-        display_specs(
+        cmd.display_specs(
             env.specs_by_hash.values(), args, decorator=decorator)
         print()
 
@@ -194,8 +197,10 @@ def find(parser, args):
     if args.format:
         for spec in results:
             print(spec.format(args.format))
+    elif args.json:
+        cmd.display_specs_as_json(results)
     elif env:
         display_env(env, args, decorator)
     else:
         tty.msg("%s" % plural(len(results), 'installed package'))
-        display_specs(results, args, decorator=decorator, all_headers=True)
+        cmd.display_specs(results, args, decorator=decorator, all_headers=True)
