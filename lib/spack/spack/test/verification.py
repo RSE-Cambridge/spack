@@ -11,6 +11,7 @@ import llnl.util.filesystem as fs
 import spack.verify
 import spack.spec
 
+
 def test_link_manifest(tmpdir):
     file = str(tmpdir.join('file'))
     open(file, 'a').close()
