@@ -94,8 +94,8 @@ def test_file_manifest(tmpdir):
     results = spack.verify.check_entry(file, data)
     assert results
     assert file in results.errors
-    assert all(x in results.errors[file] for x in ('size', 'hash', 'mtime'))
     assert len(results.errors[file]) == 3
+    assert all(x in results.errors[file] for x in ('size', 'hash', 'mtime'))
 
 
 def test_check_chmod_manifest(tmpdir):
